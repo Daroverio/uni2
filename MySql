@@ -1,7 +1,200 @@
 
+//i. Cree una base de datos en MySQL para almacenar la información
+del sistema de gestión de inventarios. La base de datos debe tener
+al menos dos tablas: "Sucursales" y "Productos". La tabla
+"Sucursales" debe contener información sobre cada sucursal,
+3
+incluyendo su ID, nombre, dirección y número de teléfono. La tabla
+"Productos" debe contener información sobre cada producto,
+incluyendo su ID, nombre, descripción y precio//
+
+CREATE DATABASE GestionInventarios;
+
+USE GestionInventarios;
+
+CREATE TABLE Sucursales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    direccion VARCHAR(255) NOT NULL,
+    telefono VARCHAR(20)
+);
+
+CREATE TABLE Productos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    precio DECIMAL(10, 2) NOT NULL
+);
+
+//ii. Implemente un sistema de transacciones distribuidas utilizando la
+herramienta Netbeans y ActiveMQ. El sistema debe ser capaz de
+manejar transacciones de compra y venta entre las sucursales y la
+sede central de la empresa. Para esto, se deben crear tres clases:
+"Transacción", "Compra" y "Venta". La clase "Transacción" debe
+contener información general sobre la transacción, como su ID,
+fecha y hora, y el ID de la sucursal que realizó la transacción. Las
+clases "Compra" y "Venta" deben contener información específica
+sobre la compra o venta, como el ID del producto, la cantidad
+comprada o vendida, y el precio unitario.//
+
+public class Transaccion {
+    private int id;
+    private Date fecha;
+    private Time hora;
+    private int sucursalId;
+
+    
+}
 
 
+public class Compra extends Transaccion {
+    private int productoId;
+    private int cantidadComprada;
+    private double precioUnitario;
 
+   
+}
+
+
+public class Venta extends Transaccion {
+    private int productoId;
+    private int cantidadVendida;
+    private double precioUnitario;
+
+   
+}
+
+//iii. Implemente un sistema de mensajería y colas de mensajes
+utilizando ActiveMQ. Este sistema debe ser capaz de manejar las
+transacciones de compra y venta en tiempo real, entre las
+sucursales y la sede central de la empresa. Para esto, debe crear
+dos clases: "Productor" y "Consumidor". La clase "Productor" debe
+enviar mensajes a una cola de mensajes de ActiveMQ con la
+información de cada transacción de compra o venta. La clase
+"Consumidor" debe leer los mensajes de la cola de mensajes de
+ActiveMQ y procesarlos en la base de datos del sistema de gestión
+de inventarios.//
+// Productor.java
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import org.apache.activemq.ActiveMQConnectionFactory;
+
+public class Productor {
+    private String brokerUrl = "tcp://localhost:61616";
+    private String queueName = "transacciones";
+
+    public void enviarMensaje(String mensaje) {
+        try {
+            ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
+            Connection connection = connectionFactory.createConnection();
+            connection.start();
+
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Destination destination = session.createQueue(queueName);
+
+            MessageProducer producer = session.createProducer(destination);
+            TextMessage textMessage = session.createTextMessage(mensaje);
+            producer.send(textMessage);
+
+            connection.close();
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+// Consumidor.java
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import org.apache.activemq.ActiveMQConnectionFactory;
+
+public class Consumidor {
+    private String brokerUrl = "tcp://localhost:61616";
+    private String queueName = "transacciones";
+
+    public void recibirMensajes() {
+        try {
+            ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
+            Connection connection = connectionFactory.createConnection();
+            connection.start();
+
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Destination destination = session.createQueue(queueName);
+
+            MessageConsumer consumer = session.createConsumer(destination);
+            consumer.setMessageListener(new MessageListener() {
+                public void onMessage(javax.jms.Message message) {
+                    if (message instanceof TextMessage) {
+                        TextMessage textMessage = (TextMessage) message;
+                        try {
+                            String mensaje = textMessage.getText();
+                            System.out.println("Recibido: " + mensaje);
+                            // Procesar el mensaje en la base de datos
+                        } catch (JMSException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+//iv. Implemente un sistema de caché distribuido utilizando la
+herramienta Netbeans. Este sistema debe ser capaz de mejorar el
+rendimiento del sistema de gestión de inventarios mediante el
+almacenamiento en caché de la información de productos y
+sucursales. Para esto, se deben crear dos clases: "CacheProduct" y
+"CacheBranch". La clase "CacheProduct" debe almacenar en caché
+la información de productos, mientras que la clase "CacheBranch"
+debe almacenar en caché la información de sucursales. //
+
+
+import java.util.HashMap;
+import java.util.Map;
+
+
+public class CacheProduct {
+    private Map<Integer, Producto> cacheProductos = new HashMap<>();
+
+    public void agregarProducto(Producto producto) {
+        cacheProductos.put(producto.getId(), producto);
+    }
+
+    public Producto obtenerProducto(int id) {
+        return cacheProductos.get(id);
+    }
+}
+
+public class CacheBranch {
+    private Map<Integer, Sucursal> cacheSucursales = new HashMap<>();
+
+    public void agregarSucursal(Sucursal sucursal) {
+        cacheSucursales.put(sucursal.getId(), sucursal);
+    }
+
+    public Sucursal obtenerSucursal(int id) {
+        return cacheSucursales.get(id);
+    }
+}
+
+
+//luis Hernando seaman 4 sistemas transaccionales//
 
 
 
